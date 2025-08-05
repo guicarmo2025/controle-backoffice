@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Controle BackOffice - Go!Mec Auto Peças</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Custom scrollbar para tabela */
+    .table-wrapper {
+      overflow-x: auto;
+    }
+    /* Toast notificações */
+    #notificacaoToast {
+      transition: opacity 0.3s ease;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans">
+
+  <div class="max-w-6xl mx-auto p-6">
+
+    <!-- LOGIN -->
+    <div id="loginBox" class="bg-white p-6 rounded shadow-md max-w-md mx-auto">
+      <h2 class="text-2xl font-bold mb-6 text-orange-600 text-center">Login</h2>
+      <label for="email" class="block font-semibold mb-1">E-mail</label>
+      <input type="email" id="email" autocomplete="username" class="w-full border border-gray-300 p-2 rounded mb-4" />
+      <label for="senha" class="block font-semibold mb-1">Senha</label>
+      <input type="password" id="senha" autocomplete="current-password" class="w-full border border-gray-300 p-2 rounded mb-6" />
+      <button onclick="fazerLogin()" class="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 rounded font-semibold transition">Entrar</button>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="mainApp" class="hidden">
+
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-orange-600">Controle BackOffice</h1>
+        <button onclick="logout()" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded transition">Sair</button>
+      </div>
+
+      <div class="flex flex-wrap gap-2 mb-6">
+        <button onclick="trocarAba(0)" class="tab-button px-4 py-2 rounded font-semibold bg-orange-600 text-white" id="btnTab0">Pedido</button>
+        <button onclick="trocarAba(1)" class="tab-button px-4 py-2 rounded font-semibold bg-gray-200 text-gray-700" id="tabMedidasBtn">Medidas</button>
+        <button onclick="trocarAba(2)" class="tab-button px-4 py-2 rounded font-semibold bg-gray-200 text-gray-700" id="btnTab2">Transporte</button>
+        <button onclick="trocarAba(3)" class="tab-button px-4 py-2 rounded font-semibold bg-gray-200 text-gray-700" id="btnTab3">Datas</button>
+        <button onclick="trocarAba(4)" class="tab-button px-4 py-2 rounded font-semibold bg-gray-200 text-gray-700" id="btnTab4">Pagamento</button>
+      </div>
+
+      <form id="pedidoForm" enctype="multipart/form-data" onsubmit="salvarPedido(event)" class="bg-white p-6 rounded shadow mb-6">
+
+        <!-- ABA PEDIDO -->
+        <div class="tab-content" id="tab0">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="ID" class="font-semibold mb-1 block">ID</label>
+              <input type="text" id="ID" name="ID" class="w-full border border-gray-300 p-2 rounded" />
+            </div>
+            <div>
+              <label for="SIGNUS" class="font-semibold mb-1 block">SIGNUS</label>
+              <input type="text" id="SIGNUS" name="SIGNUS" class="w-full border border-gray-300 p-2 rounded" />
+            </div>
+            <div>
+              <label for="faturar" class="font-semibold mb-1 block">Faturar?</label>
+              <select id="faturar" name="faturar" class="w-full border border-gray-300 p-2 rounded">
+                <option value="">Selecione</option>
+                <option value="Sim">Sim</option>
+                <option value="Não">Não</option>
+              </select>
+            </div>
+            <div>
+              <label for="nome" class="font-semibold mb-1 block">Nome</label>
+              <input type="text" id="nome" name="nome" class="w-full border border-gray-300 p-2 rounded" />
+            </div>
+            <div>
+              <label for="cpf" class="font-semibold mb-1 block">CPF</label>
+              <input type="text" id="cpf" name="cpf" class="w-full border border-gray-300 p-2 rounded" />
+            </div>
+            <div class="md:col-span-2">
+              <label for="obs" class="font-semibold mb-1 block">Observações</label>
+              <input type="text" id="obs" name="obs" class="w-full border border-gray-300 p-2 rounded" />
+            </div>
+          </div>
+        </div>
+
+        <!-- ABA MEDIDAS -->
+        <div class="tab-content hidden" id="tab1">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="altura" class="font-semibold mb-1 block">Altura (cm)</label>
+              <input type="number" min="0" step="0.01" id="altura" name="altura" class="w-full border border-gray-300 p-2 rounded" />
+            </div>
+            <div>
+              <label for="largura" class="font-semibold mb-1 block">Largura (cm)</label>
+              <input type="number" min="0" step="0.01" id="largura" name="largura" class="w-full border border-gray-300 p-2 rounded" />
+            </div>
+            <div>
+              <label for="comprimento" class="font-semibold mb-1 block">Comprimento (cm)</label>
+              <input type="number" min="0" step="0.01" id="comprimento" name="comprimento" class="w-full border border-gray-300 p-2 rounded" />
+            </div>
+            <div>
+              <label for="peso" class="font-semibold mb-1 block">Peso (kg)</label>
+              <input type="number" min="0" step="0.01" id="peso" name="peso" class="w-full border border-gray-300 p-2 rounded" />
+            </div>
+          </div>
+        </div>
+
+        <!-- ABA TRANSPORTE -->
+        <div class="tab-content hidden" id="tab2">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="transportadoraTransporte" class="font-semibold mb-1 block">Transportadora</label>
+              <select id="transportadoraTransporte" name="transportadoraTransporte" class="w-full border border-gray-300 p-2 rounded">
+                <option value="">Selecione</option>
+                <option value="SEDEX">SEDEX</option>
+                <option value="PAC">PAC</option>
+                <option value="JADLOG">JADLOG</option>
+                <option value="LOGGI">LOGGI</option>
+                <option value="RODONAVES">RODONAVES</option>
+                <option value="BRASPRESS">BRASPRESS</option>
+                <option value="PEX">PEX</option>
+                <option value="RETIRA EM LOJA">RETIRA EM LOJA</option>
+              </select>
+            </div>
+            <div>
+              <label for="valorFrete" class="font-semibold mb-1 block">Valor do Frete</label>
+              <input type="number" min="0" step="0.01" id="valorFrete" name="valorFrete" class="w-full border border-gray-300 p-2 rounded" />
+            </div>
+            <div>
+              <label for="etiqueta" class="font-semibold mb-1 block">Upload Etiqueta</label>
+              <input type="file" id="etiqueta" name="etiqueta" accept=".pdf,.png,.jpg,.jpeg" class="w-full" />
+            </div>
+            <div>
+              <label for="nf" class="font-semibold mb-1 block">Upload Nota Fiscal (NF)</label>
+              <input type="file" id="nf" name="nf" accept=".pdf,.png,.jpg,.jpeg" class="w-full" />
+            </div>
+          </div>
+        </div>
+
+        <!-- ABA DATAS -->
+        <div class="tab-content hidden" id="tab3">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label for="dataColeta" class="font-semibold mb-1 block">Data Coleta</label>
+              <input type="date" id="dataColeta" name="dataColeta" class="w-full border border-gray-300 p-2 rounded" />
+            </div>
+            <div>
+              <label for="dataPrevista" class="font-semibold mb-1 block">Data Prevista de Entrega</label>
+              <input type="date" id="dataPrevista" name="dataPrevista" class="w-full border border-gray-300 p-2 rounded" />
+            </div>
+            <div>
+              <label for="dataEntrega" class="font-semibold mb-1 block">Data de Entrega</label>
+              <input type="date" id="dataEntrega" name="dataEntrega" class="w-full border border-gray-300 p-2 rounded" />
+            </div>
+          </div>
+        </div>
+
+        <!-- ABA PAGAMENTO -->
+        <div class="tab-content hidden" id="tab4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="modalidadePgto2" class="font-semibold mb-1 block">Modalidade de Pagamento</label>
+              <select id="modalidadePgto2" name="modalidadePgto2" class="w-full border border-gray-300 p-2 rounded">
+                <option value="">Selecione</option>
+                <option value="PIX">PIX</option>
+                <option value="CARTÃO DE CRÉDITO">CARTÃO DE CRÉDITO</option>
+                <option value="BOLETO">BOLETO</option>
+              </select>
+            </div>
+            <div>
+              <label for="rastreio" class="font-semibold mb-1 block">Rastreio (link)</label>
+              <input type="url" id="rastreio" name="rastreio" placeholder="Link de rastreio" disabled class="w-full border border-gray-300 p-2 rounded" />
+            </div>
+          </div>
+        </div>
+
+        <input type="hidden" id="status" name="status" />
+
+        <button type="submit" class="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 rounded font-semibold mt-6 transition">Salvar Pedido</button>
+
+      </form>
+
+      <div class="flex flex-wrap gap-4 mb-4">
+        <input type="text" id="filtroID" placeholder="Filtrar por ID ou SIGNUS" oninput="carregarPedidos()" class="flex-grow min-w-[180px] p-2 border border-gray-300 rounded" />
+        <select id="filtroStatus" onchange="carregarPedidos()" class="min-w-[180px] p-2 border border-gray-300 rounded">
+          <option value="">Todos os Status</option>
+          <option value="Aguardando Medidas">Aguardando Medidas</option>
+          <option value="Aguardando Etiqueta">Aguardando Etiqueta</option>
+          <option value="Em Transporte">Em Transporte</option>
+          <option value="Entregue">Entregue</option>
+        </select>
+        <button onclick="exportarCSV()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-semibold transition">Exportar CSV</button>
+        <button onclick="exportarXLS()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded font-semibold transition">Exportar XLS</button>
+      </div>
+
+      <div class="table-wrapper bg-white rounded shadow overflow-x-auto">
+        <table class="min-w-full text-left text-sm">
+          <thead class="bg-gray-200 font-semibold">
+            <tr>
+              <th class="px-3 py-2 border">ID</th>
+              <th class="px-3 py-2 border">SIGNUS</th>
+              <th class="px-3 py-2 border">Status</th>
+              <th class="px-3 py-2 border">Transportadora</th>
+              <th class="px-3 py-2 border">Entrega</th>
+              <th class="px-3 py-2 border">Arquivos</th>
+              <th class="px-3 py-2 border">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaPedidos" class="bg-white"></tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Notificação toast -->
+  <div id="notificacaoToast" class="fixed top-5 right-5 bg-gray-800 text-white px-4 py-2 rounded shadow-lg opacity-0 pointer-events-none"></div>
+
+<script>
+  let usuarioAtual = "";
+  let editIndex = null;
+
+  const usuarios = {
+    "leticia@gomecautopecas.com.br": "Leticia123",
+    "expedicaoecommerce@gomecautopecas.com.br": "Expedicao123",
+    "aline.pinheiro@gomecautopecas.com.br": "Aline123",
+    "breno@gomecautopecas.com.br": "Breno123",
+    "guilherme.pinheiro@gomecautopecas.com.br": "Guilherme123"
+  };
+
+  // Mostrar notificação tipo 'success', 'error' ou 'info'
+  function mostrarNotificacao(msg, tipo = 'info') {
+    const el = document.getElementById('notificacaoToast');
+    el.textContent = msg;
+    el.className = `fixed top-5 right-5 px-4 py-2 rounded shadow-lg transition-opacity duration-300
+      bg-${tipo === 'error' ? 'red-600' : tipo === 'success' ? 'green-600' : 'blue-600'} text-white opacity-100 pointer-events-auto`;
+    clearTimeout(el.timeout);
+    el.timeout = setTimeout(() => {
+      el.classList.remove('opacity-100');
+      el.classList.add('opacity-0');
+      el.classList.remove('pointer-events-auto');
+    }, 4000);
+  }
+
+  function fazerLogin() {
+    const email = document.getElementById("email").value.trim().toLowerCase();
+    const senha = document.getElementById("senha").value;
+
+    if (usuarios[email] === senha) {
+      usuarioAtual = email;
+      localStorage.setItem("usuarioAtual", usuarioAtual);
+      document.getElementById("loginBox").classList.add("hidden");
+      document.getElementById("mainApp").classList.remove("hidden");
+
+      // Mostrar ou esconder aba medidas
+      if (usuarioAtual === "expedicaoecommerce@gomecautopecas.com.br") {
+        document.getElementById("tabMedidasBtn").classList.remove("hidden");
+      } else {
+        document.getElementById("tabMedidasBtn").classList.add("hidden");
+        if (!document.getElementById("tab0").classList.contains("block")) {
+          trocarAba(0);
+        }
+      }
+
+      limparFormulario();
+      carregarPedidos();
+      setFormAccessByUser();
+      trocarAba(0);
+
+      mostrarNotificacao("Login bem-sucedido", "success");
+    } else {
+      mostrarNotificacao("E-mail ou senha incorretos", "error");
+    }
+  }
+
+  function logout() {
+    usuarioAtual = "";
+    localStorage.removeItem("usuarioAtual");
+    editIndex = null;
+    document.getElementById("mainApp").classList.add("hidden");
+    document.getElementById("loginBox").classList.remove("hidden");
+    limparFormulario();
+    mostrarNotificacao("Logout realizado", "success");
+  }
+
+  // Controla abas com classes Tailwind
+  function trocarAba(num) {
+    const abas = [0,1,2,3,4];
+    abas.forEach(i => {
+      const aba = document.getElementById("tab"+i);
+      const btn = document.getElementById("btnTab"+i) || (i===1 ? document.getElementById("tabMedidasBtn") : null);
+      if(i === num){
+        aba.classList.remove("hidden");
+        aba.classList.add("block");
+        if(btn) {
+          btn.classList.add("bg-orange-600", "text-white");
+          btn.classList.remove("bg-gray-200","text-gray-700");
+        }
+      } else {
+        aba.classList.add("hidden");
+        aba.classList.remove("block");
+        if(btn) {
+          btn.classList.remove("bg-orange-600", "text-white");
+          btn.classList.add("bg-gray-200","text-gray-700");
+        }
+      }
+    });
+  }
+
+  function limparFormulario() {
+    editIndex = null;
+    const campos = [
+      "ID","SIGNUS","faturar","nome","cpf","obs",
+      "altura","largura","comprimento","peso",
+      "etiqueta","nf","rastreio",
+      "transportadoraTransporte","valorFrete",
+      "dataColeta","dataPrevista","dataEntrega",
+      "modalidadePgto2","status"
+    ];
+    campos.forEach(campo => {
+      const el = document.getElementById(campo);
+      if (!el) return;
+      if (campo === "etiqueta" || campo === "nf") {
+        el.value = "";
+        el.dataset.fileName = "";
+      } else if (el.tagName === "SELECT") {
+        el.selectedIndex = 0;
+      } else {
+        el.value = "";
+      }
+    });
+    document.getElementById("rastreio").disabled = true;
+  }
+
+  // Controle de permissões e acesso aos campos conforme usuário
+  function setFormAccessByUser() {
+    // Usuário expedição só pode ver: ID, SIGNUS, medidas, NF e etiqueta
+    if (usuarioAtual === "expedicaoecommerce@gomecautopecas.com.br") {
+      // Ocultar todos os campos menos os permitidos
+      const permitidos = ["ID","SIGNUS","altura","largura","comprimento","peso","nf","etiqueta"];
+      document.querySelectorAll("form#pedidoForm input, form#pedidoForm select, form#pedidoForm textarea").forEach(input => {
+        if(!permitidos.includes(input.id)){
+          input.disabled = true;
+          input.closest("div")?.classList.add("opacity-50");
+        } else {
+          input.disabled = false;
+          input.closest("div")?.classList.remove("opacity-50");
+        }
+      });
+
+      // Mostrar somente aba medidas e transporte (para upload) e aba pedido simplificada
+      document.getElementById("tabMedidasBtn").classList.remove("hidden");
+      document.getElementById("btnTab0").classList.remove("hidden");
+      document.getElementById("btnTab2").classList.remove("hidden");
+      document.getElementById("btnTab3").classList.add("hidden");
+      document.getElementById("btnTab4").classList.add("hidden");
+
+    } else {
+      // Outros usuários tem acesso total
+      document.querySelectorAll("form#pedidoForm input, form#pedidoForm select, form#pedidoForm textarea").forEach(input => {
+        input.disabled = false;
+        input.closest("div")?.classList.remove("opacity-50");
+      });
+      // Mostrar todas as abas
+      document.getElementById("tabMedidasBtn").classList.add("hidden");
+      document.getElementById("btnTab3").classList.remove("hidden");
+      document.getElementById("btnTab4").classList.remove("hidden");
+    }
+  }
+
+  // Salva pedido (novo ou edição)
+  function salvarPedido(event) {
+    event.preventDefault();
+
+    const pedido = capturarDadosFormulario();
+
+    if(!pedido.ID || !pedido.SIGNUS) {
+      mostrarNotificacao("ID e SIGNUS são obrigatórios!", "error");
+      return;
+    }
+
+    // Valida status conforme regras
+    atualizarStatus(pedido);
+
+    // Grava arquivos upload
+    salvarArquivos(pedido);
+
+    // Pega lista atual, edita ou adiciona
+    let pedidos = JSON.parse(localStorage.getItem("pedidos") || "[]");
+
+    if(editIndex !== null && pedidos[editIndex]){
+      pedidos[editIndex] = pedido;
+      mostrarNotificacao("Pedido atualizado com sucesso!", "success");
+    } else {
+      pedidos.push(pedido);
+      mostrarNotificacao("Pedido salvo com sucesso!", "success");
+    }
+
+    localStorage.setItem("pedidos", JSON.stringify(pedidos));
+    limparFormulario();
+    carregarPedidos();
+  }
+
+  function capturarDadosFormulario(){
+    return {
+      ID: document.getElementById("ID").value.trim(),
+      SIGNUS: document.getElementById("SIGNUS").value.trim(),
+      faturar: document.getElementById("faturar").value,
+      nome: document.getElementById("nome").value.trim(),
+      cpf: document.getElementById("cpf").value.trim(),
+      obs: document.getElementById("obs").value.trim(),
+      altura: document.getElementById("altura").value,
+      largura: document.getElementById("largura").value,
+      comprimento: document.getElementById("comprimento").value,
+      peso: document.getElementById("peso").value,
+      etiqueta: document.getElementById("etiqueta").dataset.fileName || "",
+      nf: document.getElementById("nf").dataset.fileName || "",
+      transportadoraTransporte: document.getElementById("transportadoraTransporte").value,
+      valorFrete: document.getElementById("valorFrete").value,
+      dataColeta: document.getElementById("dataColeta").value,
+      dataPrevista: document.getElementById("dataPrevista").value,
+      dataEntrega: document.getElementById("dataEntrega").value,
+      modalidadePgto2: document.getElementById("modalidadePgto2").value,
+      rastreio: document.getElementById("rastreio").value.trim(),
+      status: document.getElementById("status").value,
+    };
+  }
+
+  function atualizarStatus(pedido){
+    // Status muda automaticamente conforme progresso e campos preenchidos
+    if(!pedido.altura || !pedido.largura || !pedido.comprimento || !pedido.peso) {
+      pedido.status = "Aguardando Medidas";
+      document.getElementById("rastreio").disabled = true;
+    } else if(!pedido.etiqueta) {
+      pedido.status = "Aguardando Etiqueta";
+      document.getElementById("rastreio").disabled = true;
+    } else if(pedido.rastreio && pedido.rastreio.trim() !== "") {
+      pedido.status = "Em Transporte";
+      document.getElementById("rastreio").disabled = false;
+    } else if(pedido.dataEntrega && pedido.dataEntrega !== "") {
+      pedido.status = "Entregue";
+      document.getElementById("rastreio").disabled = false;
+    } else {
+      pedido.status = pedido.status || "Aguardando Medidas";
+      document.getElementById("rastreio").disabled = !pedido.etiqueta;
+    }
+    document.getElementById("status").value = pedido.status;
+  }
+
+  // Upload dos arquivos em Base64 no localStorage para simular armazenamento
+  function salvarArquivos(pedido) {
+    const etiquetaInput = document.getElementById("etiqueta");
+    const nfInput = document.getElementById("nf");
+
+    if(etiquetaInput.files.length > 0) {
+      const file = etiquetaInput.files[0];
+      pedido.etiqueta = file.name;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        salvarArquivoBase64("etiqueta-" + pedido.ID, e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    if(nfInput.files.length > 0) {
+      const file = nfInput.files[0];
+      pedido.nf = file.name;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        salvarArquivoBase64("nf-" + pedido.ID, e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function salvarArquivoBase64(key, base64data){
+    localStorage.setItem(key, base64data);
+  }
+
+  // Carrega os pedidos na tabela e filtra
+  function carregarPedidos() {
+    const filtroID = document.getElementById("filtroID").value.toLowerCase();
+    const filtroStatus = document.getElementById("filtroStatus").value;
+
+    const pedidos = JSON.parse(localStorage.getItem("pedidos") || "[]");
+
+    const tbody = document.getElementById("tabelaPedidos");
+    tbody.innerHTML = "";
+
+    pedidos.forEach((pedido, idx) => {
+      if(filtroID && !pedido.ID.toLowerCase().includes(filtroID) && !pedido.SIGNUS.toLowerCase().includes(filtroID)) {
+        return;
+      }
+      if(filtroStatus && pedido.status !== filtroStatus) {
+        return;
+      }
+
+      // Montar links de arquivos para download
+      const linksArquivos = [];
+
+      if(pedido.etiqueta) {
+        const dataEtiqueta = localStorage.getItem("etiqueta-" + pedido.ID);
+        if(dataEtiqueta) {
+          linksArquivos.push(`<a href="${dataEtiqueta}" download="${pedido.etiqueta}" class="text-blue-600 underline mr-2">Etiqueta</a>`);
+        }
+      }
+
+      if(pedido.nf) {
+        const dataNF = localStorage.getItem("nf-" + pedido.ID);
+        if(dataNF) {
+          linksArquivos.push(`<a href="${dataNF}" download="${pedido.nf}" class="text-blue-600 underline mr-2">NF</a>`);
+        }
+      }
+
+      // Para expedição: ocultar colunas menos importantes, então só mostra ID, SIGNUS, medidas, NF e etiqueta, status e transportadora
+      // Mas na tabela geral, mostra tudo menos campos sensíveis (simplificado aqui)
+      // Controle visual pode ser melhorado depois conforme regras
+
+      tbody.innerHTML += `
+        <tr class="border-b hover:bg-gray-50">
+          <td class="px-3 py-2 border">${pedido.ID}</td>
+          <td class="px-3 py-2 border">${pedido.SIGNUS}</td>
+          <td class="px-3 py-2 border">${pedido.status || ""}</td>
+          <td class="px-3 py-2 border">${pedido.transportadoraTransporte || ""}</td>
+          <td class="px-3 py-2 border">${pedido.dataEntrega || ""}</td>
+          <td class="px-3 py-2 border">${linksArquivos.join("") || "-"}</td>
+          <td class="px-3 py-2 border">
+            <button onclick="editarPedido(${idx})" class="text-orange-600 hover:text-orange-800 font-semibold">Editar</button>
+            <button onclick="excluirPedido(${idx})" class="text-red-600 hover:text-red-800 font-semibold ml-2">Excluir</button>
+          </td>
+        </tr>`;
+    });
+  }
+
+  // Editar pedido
+  function editarPedido(idx) {
+    const pedidos = JSON.parse(localStorage.getItem("pedidos") || "[]");
+    if(!pedidos[idx]) return;
+
+    const p = pedidos[idx];
+    editIndex = idx;
+
+    document.getElementById("ID").value = p.ID || "";
+    document.getElementById("SIGNUS").value = p.SIGNUS || "";
+    document.getElementById("faturar").value = p.faturar || "";
+    document.getElementById("nome").value = p.nome || "";
+    document.getElementById("cpf").value = p.cpf || "";
+    document.getElementById("obs").value = p.obs || "";
+    document.getElementById("altura").value = p.altura || "";
+    document.getElementById("largura").value = p.largura || "";
+    document.getElementById("comprimento").value = p.comprimento || "";
+    document.getElementById("peso").value = p.peso || "";
+    document.getElementById("transportadoraTransporte").value = p.transportadoraTransporte || "";
+    document.getElementById("valorFrete").value = p.valorFrete || "";
+    document.getElementById("dataColeta").value = p.dataColeta || "";
+    document.getElementById("dataPrevista").value = p.dataPrevista || "";
+    document.getElementById("dataEntrega").value = p.dataEntrega || "";
+    document.getElementById("modalidadePgto2").value = p.modalidadePgto2 || "";
+    document.getElementById("rastreio").value = p.rastreio || "";
+    document.getElementById("status").value = p.status || "";
+
+    // Setar arquivos para exibir nome e permitir download
+    if(p.etiqueta) {
+      const etiquetaInput = document.getElementById("etiqueta");
+      etiquetaInput.dataset.fileName = p.etiqueta;
+    }
+    if(p.nf) {
+      const nfInput = document.getElementById("nf");
+      nfInput.dataset.fileName = p.nf;
+    }
+
+    atualizarStatus(p);
+    setFormAccessByUser();
+
+    mostrarNotificacao("Dados carregados para edição", "info");
+
+    // Ir para aba inicial
+    trocarAba(0);
+  }
+
+  function excluirPedido(idx) {
+    if(!confirm("Deseja realmente excluir este pedido?")) return;
+
+    let pedidos = JSON.parse(localStorage.getItem("pedidos") || "[]");
+    if(!pedidos[idx]) return;
+
+    // Remover arquivos
+    const pedido = pedidos[idx];
+    localStorage.removeItem("etiqueta-" + pedido.ID);
+    localStorage.removeItem("nf-" + pedido.ID);
+
+    pedidos.splice(idx, 1);
+    localStorage.setItem("pedidos", JSON.stringify(pedidos));
+    carregarPedidos();
+    mostrarNotificacao("Pedido excluído", "success");
+  }
+
+  // Exportar CSV
+  function exportarCSV() {
+    const pedidos = JSON.parse(localStorage.getItem("pedidos") || "[]");
+    if(pedidos.length === 0) {
+      mostrarNotificacao("Nenhum pedido para exportar", "error");
+      return;
+    }
+
+    const headers = ["ID", "SIGNUS", "Faturar", "Nome", "CPF", "Obs", "Altura", "Largura", "Comprimento", "Peso", "Etiqueta", "NF", "Transportadora", "Valor Frete", "Data Coleta", "Data Prevista", "Data Entrega", "Modalidade Pgto", "Rastreio", "Status"];
+
+    const rows = pedidos.map(p => [
+      p.ID, p.SIGNUS, p.faturar, p.nome, p.cpf, p.obs,
+      p.altura, p.largura, p.comprimento, p.peso,
+      p.etiqueta, p.nf,
+      p.transportadoraTransporte, p.valorFrete,
+      p.dataColeta, p.dataPrevista, p.dataEntrega,
+      p.modalidadePgto2, p.rastreio, p.status
+    ]);
+
+    let csvContent = headers.join(",") + "\n";
+    rows.forEach(row => {
+      const line = row.map(field => `"${(field||"").toString().replace(/"/g, '""')}"`).join(",");
+      csvContent += line + "\n";
+    });
+
+    const blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "pedidos_export.csv";
+    link.click();
+  }
+
+  // Exportar XLS (CSV renomeado com mime para abrir no Excel)
+  function exportarXLS() {
+    const pedidos = JSON.parse(localStorage.getItem("pedidos") || "[]");
+    if(pedidos.length === 0) {
+      mostrarNotificacao("Nenhum pedido para exportar", "error");
+      return;
+    }
+
+    const headers = ["ID", "SIGNUS", "Faturar", "Nome", "CPF", "Obs", "Altura", "Largura", "Comprimento", "Peso", "Etiqueta", "NF", "Transportadora", "Valor Frete", "Data Coleta", "Data Prevista", "Data Entrega", "Modalidade Pgto", "Rastreio", "Status"];
+
+    const rows = pedidos.map(p => [
+      p.ID, p.SIGNUS, p.faturar, p.nome, p.cpf, p.obs,
+      p.altura, p.largura, p.comprimento, p.peso,
+      p.etiqueta, p.nf,
+      p.transportadoraTransporte, p.valorFrete,
+      p.dataColeta, p.dataPrevista, p.dataEntrega,
+      p.modalidadePgto2, p.rastreio, p.status
+    ]);
+
+    let xlsContent = headers.join("\t") + "\n";
+    rows.forEach(row => {
+      const line = row.map(field => (field || "").toString().replace(/\t/g, " ")).join("\t");
+      xlsContent += line + "\n";
+    });
+
+    const blob = new Blob([xlsContent], {type: 'application/vnd.ms-excel'});
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "pedidos_export.xls";
+    link.click();
+  }
+
+  // Atualizar habilitação do campo rastreio conforme etiqueta
+  document.getElementById("etiqueta").addEventListener("change", function(){
+    const hasFile = this.files.length > 0;
+    document.getElementById("rastreio").disabled = !hasFile;
+  });
+
+  // Persistir login se já existe
+  window.onload = () => {
+    const usuarioSalvo = localStorage.getItem("usuarioAtual");
+    if(usuarioSalvo) {
+      document.getElementById("loginBox").classList.add("hidden");
+      document.getElementById("mainApp").classList.remove("hidden");
+      usuarioAtual = usuarioSalvo;
+      setFormAccessByUser();
+      carregarPedidos();
+      trocarAba(0);
+      mostrarNotificacao(`Bem vindo de volta, ${usuarioAtual}`, "success");
+    }
+  };
+</script>
+
+</body>
+</html>
