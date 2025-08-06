@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Controle BackOffice - Go!Mec</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Estilo para alertas na calculadora */
+    #resultado.positivo { color: green; font-weight: bold; }
+    #resultado.negativo { color: red; font-weight: bold; }
+    #mensagemDevolucao { color: red; font-weight: bold; font-size: 12px; margin-top: 5px; }
+  </style>
+</head>
+<body class="bg-gray-100 p-6 font-sans">
+
+  <h1 class="text-2xl font-bold text-center mb-6 text-red-700">Controle BackOffice - Go!Mec</h1>
+
+  <!-- Abas -->
+  <div class="flex space-x-4 justify-center mb-6">
+    <button onclick="showTab('devolucoes')" class="tab-btn bg-red-600 text-white px-4 py-2 rounded">Devoluções</button>
+    <button onclick="showTab('rupturas')" class="tab-btn bg-gray-300 px-4 py-2 rounded">Rupturas</button>
+    <button onclick="showTab('calculadora')" class="tab-btn bg-gray-300 px-4 py-2 rounded">Calculadora de Lucro</button>
+  </div>
+
+  <!-- Devoluções -->
+  <div id="devolucoes" class="tab-content">
+    <div class="flex justify-between mb-4">
+      <div>
+        <label class="mr-2 font-medium">Filtrar:</label>
+        <select id="filterTipo" onchange="renderDevolucoes()" class="border rounded px-2 py-1">
+          <option value="todos">Todos</option>
+          <option value="Devolução">Devolução</option>
+          <option value="Garantia">Garantia</option>
+          <option value="Descarte">Descarte</option>
+        </select>
+      </div>
+      <button onclick="abrirModal()" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700">
+        + Nova Devolução
+      </button>
+    </div>
+
+    <table class="w-full bg-white rounded shadow">
+      <thead class="bg-red-600 text-white">
+        <tr>
+          <th class="p-2">Pedido</th>
+          <th class="p-2">Cliente</th>
+          <th class="p-2">Motivo</th>
+          <th class="p-2">Tipo</th>
+          <th class="p-2">Retorno</th>
+          <th class="p-2">Peça</th>
+          <th class="p-2">Conta</th>
+          <th class="p-2">Status</th>
+          <th class="p-2">Ações</th>
+        </tr>
+      </thead>
+      <tbody id="devolucoesBody"></tbody>
+    </table>
+  </div>
+
+  <!-- Modal Devoluções -->
+  <div id="modal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-10">
+    <div class="bg-white p-6 rounded shadow w-full max-w-xl">
+      <h2 class="text-xl font-bold mb-4">Nova Devolução</h2>
+      <form id="formDevolucao" onsubmit="salvarDevolucao(event)">
+        <div class="grid grid-cols-2 gap-4">
+          <input required placeholder="Pedido" name="pedido" class="border p-2 rounded"/>
+          <input required placeholder="Cliente" name="cliente" class="border p-2 rounded"/>
+          <input required placeholder="Motivo" name="motivo" class="border p-2 rounded"/>
+          
+          <select name="tipo" required class="border p-2 rounded">
+            <option value="">Tipo</option>
+            <option>Devolução</option>
+            <option>Garantia</option>
+            <option>Descarte</option>
+          </select>
+          
+          <select name="retorno" required class="border p-2 rounded">
+            <option value="">Retorno</option>
+            <option>Parcial</option>
+            <option>Integral</option>
+          </select>
+          
+          <input required placeholder="Peça Devolvida" name="peca" class="border p-2 rounded"/>
+          
+          <select name="conta" required class="border p-2 rounded col-span-2">
+            <option value="">Conta</option>
+            <option>GOMEC</option>
+            <option>GAP</option>
+            <option>ALEFE</option>
+            <option>MAGALU-ES</option>
+            <option>MAGALU</option>
+            <option>SHOPEE</option>
+          </select>
+        </div>
+        <div class="flex justify-end mt-4">
+          <button type="button" onclick="fecharModal()" class="px-4 py-2 bg-gray-300 rounded mr-2">Cancelar</button>
+          <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Rupturas -->
+  <div id="rupturas" class="tab-content hidden">
+    <div class="flex justify-end mb-4">
+      <button onclick="abrirModalRuptura()" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700">
+        + Nova Ruptura
+      </button>
+    </div>
+
+    <table class="w-full bg-white rounded shadow">
+      <thead class="bg-red-600 text-white">
+        <tr class="text-sm">
+          <th class="p-2">Pedido</th>
+          <th class="p-2">Conta</th>
+          <th class="p-2">Comprador</th>
+          <th class="p-2">Código da Peça</th>
+          <th class="p-2">Qtd A</th>
+          <th class="p-2">Situação</th>
+          <th class="p-2">Requisição</th>
+          <th class="p-2">Fornecedor</th>
+          <th class="p-2">Data</th>
+          <th class="p-2">Status Final</th>
+          <th class="p-2">Motivo</th>
+          <th class="p-2">Valor R$</th>
+          <th class="p-2">Ações</th>
+        </tr>
+      </thead>
+      <tbody id="rupturasBody"></tbody>
+    </table>
+  </div>
+
+  <!-- Modal Ruptura -->
+  <div id="modalRuptura" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-10">
+    <div class="bg-white p-6 rounded shadow w-full max-w-3xl">
+      <h2 class="text-xl font-bold mb-4">Nova Ruptura</h2>
+      <form id="formRuptura" onsubmit="salvarRuptura(event)">
+        <div class="grid grid-cols-3 gap-4 text-sm">
+          <input name="pedido" placeholder="Número do Pedido" class="border p-2 rounded"/>
+          <select name="conta" class="border p-2 rounded">
+            <option value="">Conta</option>
+            <option>GOMEC</option>
+            <option>GAP</option>
+            <option>ALEFE</option>
+            <option>MAGALU-ES</option>
+            <option>MAGALU</option>
+            <option>SHOPEE</option>
+          </select>
+          <select name="comprador" class="border p-2 rounded">
+            <option value="">Comprador</option>
+            <option>Kevin</option>
+            <option>Heitor</option>
+            <option>Pedro</option>
+            <option>Nelson</option>
+            <option>Evellyn</option>
+          </select>
+          <input name="codigo" placeholder="Código da Peça" class="border p-2 rounded"/>
+          <input name="quantidade" placeholder="Quantidade A" type="number" class="border p-2 rounded"/>
+          <select name="situacao" class="border p-2 rounded">
+            <option value="">Situação</option>
+            <option>Aguardando Compras</option>
+            <option>Oferecer Similar</option>
+            <option>Em Falta</option>
+            <option>Concluído</option>
+          </select>
+          <input name="requisicao" placeholder="Requisição de Compra" class="border p-2 rounded"/>
+          <input name="fornecedor" placeholder="Fornecedor" class="border p-2 rounded"/>
+          <input name="data" placeholder="Data da Solicitação" type="date" class="border p-2 rounded"/>
+          <select name="statusFinal" onchange="mostrarMotivo(this)" class="border p-2 rounded">
+            <option value="">Status Final</option>
+            <option>Atendido</option>
+            <option>Cancelado</option>
+          </select>
+          <input name="motivo" placeholder="Motivo (se cancelado)" class="border p-2 rounded" disabled/>
+          <input name="valor" placeholder="Valor da Venda" type="number" step="0.01" class="border p-2 rounded"/>
+        </div>
+        <div class="flex justify-end mt-4">
+          <button type="button" onclick="fecharModalRuptura()" class="px-4 py-2 bg-gray-300 rounded mr-2">Cancelar</button>
+          <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Calculadora de Lucro -->
+  <div id="calculadora" class="tab-content hidden max-w-lg mx-auto bg-white p-6 rounded shadow">
+    <h3 class="text-xl font-bold mb-4">Calculadora de Lucro</h3>
+    <label class="block mb-1">Preço de Venda Futura</label>
+    <input type="number" id="vendaFutura" class="border rounded w-full mb-3 px-2 py-1" />
+
+    <label class="block mb-1">Tarifa (%)</label>
+    <input type="number" id="tarifa" class="border rounded w-full mb-3 px-2 py-1" />
+
+    <label class="block mb-1">Prejuízo da Devolução</label>
+    <input type="number" id="prejuizoDevolucao" class="border rounded w-full mb-3 px-2 py-1" />
+
+    <label class="block mb-1">Frete Pago</label>
+    <input type="number" id="frete" class="border rounded w-full mb-3 px-2 py-1" />
+
+    <label class="block mb-1">Custo da Peça</label>
+    <input type="number" id="custoPeca" class="border rounded w-full mb-3 px-2 py-1" />
+
+    <button onclick="calcularLucro()" class="bg-blue-600 text-white w-full py-2 rounded font-bold hover:bg-blue-700">Calcular Lucro</button>
+
+    <div id="resultado" class="mt-4 text-center font-bold"></div>
+    <div id="mensagemDevolucao" class="text-center"></div>
+
+    <div class="mt-6 text-sm text-gray-700">
+      <p><strong>Instruções:</strong></p>
+      <p>🟢 <span class="text-green-600 font-semibold">Positivo (lucro)</span> se o valor final cobrir os custos e gerar ganho.</p>
+      <p>🔴 <span class="text-red-600 font-semibold">Negativo (prejuízo)</span> se o valor final não for suficiente para cobrir a diferença.</p>
+    </div>
+  </div>
+
+  <script>
+    // Gerenciar abas
+    function showTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+      document.getElementById(tabId).classList.remove('hidden');
+
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('bg-red-600', 'text-white');
+        btn.classList.add('bg-gray-300');
+      });
+
+      if(tabId === 'devolucoes') {
+        document.querySelectorAll('.tab-btn')[0].classList.add('bg-red-600', 'text-white');
+      } else if(tabId === 'rupturas') {
+        document.querySelectorAll('.tab-btn')[1].classList.add('bg-red-600', 'text-white');
+      } else if(tabId === 'calculadora') {
+        document.querySelectorAll('.tab-btn')[2].classList.add('bg-red-600', 'text-white');
+      }
+    }
+
+    // Modal Devoluções
+    function abrirModal() {
+      document.getElementById('modal').classList.remove('hidden');
+    }
+    function fecharModal() {
+      document.getElementById('formDevolucao').reset();
+      document.getElementById('modal').classList.add('hidden');
+    }
+
+    // Modal Rupturas
+    function abrirModalRuptura() {
+      document.getElementById('modalRuptura').classList.remove('hidden');
+    }
+    function fecharModalRuptura() {
+      const form = document.getElementById('formRuptura');
+      form.reset();
+      delete form.dataset.editIndex;
+      document.querySelector('input[name="motivo"]').disabled = true;
+      document.getElementById('modalRuptura').classList.add('hidden');
+    }
+
+    function mostrarMotivo(select) {
+      const motivoInput = select.form.motivo;
+      motivoInput.disabled = select.value !== 'Cancelado';
+      if(select.value !== 'Cancelado') motivoInput.value = '';
+    }
+
+    // LOCALSTORAGE DEVOLUÇÕES
+    function getDevolucoes() {
+      return JSON.parse(localStorage.getItem('devolucoes')) || [];
+    }
+    function salvarDevolucoes(data) {
+      localStorage.setItem('devolucoes', JSON.stringify(data));
+    }
+    function salvarDevolucao(event) {
+      event.preventDefault();
+      const form = event.target;
+      const nova = {
+        pedido: form.pedido.value,
+        cliente: form.cliente.value,
+        motivo: form.motivo.value,
+        tipo: form.tipo.value,
+        retorno: form.retorno.value,
+        peca: form.peca.value,
+        conta: form.conta.value,
+        status: 'Em análise'
+      };
+      const dados = getDevolucoes();
+      dados.push(nova);
+      salvarDevolucoes(dados);
+      renderDevolucoes();
+      fecharModal();
+    }
+    // Filtrar e renderizar devoluções
+    function renderDevolucoes() {
+      const filter = document.getElementById('filterTipo').value;
+      const tbody = document.getElementById('devolucoesBody');
+      tbody.innerHTML = '';
+      const dados = getDevolucoes();
+
+      const filtrados = filter === 'todos' ? dados : dados.filter(d => d.tipo === filter);
+
+      filtrados.forEach((item, index) => {
+        const tr = document.createElement('tr');
+        tr.className = "text-center border-t";
+        tr.innerHTML = `
+          <td class="p-2">${item.pedido}</td>
+          <td class="p-2">${item.cliente}</td>
+          <td class="p-2">${item.motivo}</td>
+          <td class="p-2">${item.tipo}</td>
+          <td class="p-2">${item.retorno}</td>
+          <td class="p-2">${item.peca}</td>
+          <td class="p-2">${item.conta}</td>
+          <td class="p-2">${item.status}</td>
+          <td class="p-2 space-x-2">
+            <button onclick="recorrer(${index})" class="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded">Recorrer</button>
+            <button onclick="finalizar(${index})" class="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded">Finalizar</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+    function recorrer(index) {
+      const dados = getDevolucoes();
+      if(dados[index].status !== 'Finalizado') {
+        dados[index].status = 'Recorrendo';
+        salvarDevolucoes(dados);
+        renderDevolucoes();
+      }
+    }
+    function finalizar(index) {
+      const dados = getDevolucoes();
+      dados[index].status = 'Finalizado';
+      salvarDevolucoes(dados);
+      renderDevolucoes();
+    }
+
+    // LOCALSTORAGE RUPTURAS
+    function getRupturas() {
+      return JSON.parse(localStorage.getItem('rupturas')) || [];
+    }
+    function salvarRupturas(data) {
+      localStorage.setItem('rupturas', JSON.stringify(data));
+    }
+    function salvarRuptura(event) {
+      event.preventDefault();
+      const form = event.target;
+      const dados = getRupturas();
+
+      const nova = {
+        pedido: form.pedido.value,
+        conta: form.conta.value,
+        comprador: form.comprador.value,
+        codigo: form.codigo.value,
+        quantidade: form.quantidade.value,
+        situacao: form.situacao.value,
+        requisicao: form.requisicao.value,
+        fornecedor: form.fornecedor.value,
+        data: form.data.value,
+        statusFinal: form.statusFinal.value,
+        motivo: form.motivo.value,
+        valor: form.valor.value
+      };
+
+      if (form.dataset.editIndex !== undefined) {
+        dados[form.dataset.editIndex] = nova;
+        delete form.dataset.editIndex;
+      } else {
+        dados.push(nova);
+      }
+      salvarRupturas(dados);
+      renderRupturas();
+      fecharModalRuptura();
+    }
+
+    // Renderiza rupturas na tabela
+    function renderRupturas() {
+      const tbody = document.getElementById('rupturasBody');
+      tbody.innerHTML = '';
+      const dados = getRupturas();
+
+      dados.forEach((item, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = "text-center border-t text-sm";
+        tr.innerHTML = `
+          <td class="p-2">${item.pedido || ''}</td>
+          <td class="p-2">${item.conta || ''}</td>
+          <td class="p-2">${item.comprador || ''}</td>
+          <td class="p-2">${item.codigo || ''}</td>
+          <td class="p-2">${item.quantidade || ''}</td>
+          <td class="p-2">${item.situacao || ''}</td>
+          <td class="p-2">${item.requisicao || ''}</td>
+          <td class="p-2">${item.fornecedor || ''}</td>
+          <td class="p-2">${item.data || ''}</td>
+          <td class="p-2">${item.statusFinal || ''}</td>
+          <td class="p-2">${item.motivo || ''}</td>
+          <td class="p-2">${item.valor || ''}</td>
+          <td class="p-2 space-x-2">
+            <button onclick="window.open('https://192.168.0.170:5000/', '_blank')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded">Solicitar Compra</button>
+            <button onclick="editarRuptura(${idx})" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded ml-2">Editar</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Editar ruptura (abre modal com dados preenchidos)
+    function editarRuptura(index) {
+      const dados = getRupturas();
+      const ruptura = dados[index];
+      const form = document.getElementById('formRuptura');
+
+      form.pedido.value = ruptura.pedido || '';
+      form.conta.value = ruptura.conta || '';
+      form.comprador.value = ruptura.comprador || '';
+      form.codigo.value = ruptura.codigo || '';
+      form.quantidade.value = ruptura.quantidade || '';
+      form.situacao.value = ruptura.situacao || '';
+      form.requisicao.value = ruptura.requisicao || '';
+      form.fornecedor.value = ruptura.fornecedor || '';
+      form.data.value = ruptura.data || '';
+      form.statusFinal.value = ruptura.statusFinal || '';
+      form.motivo.value = ruptura.motivo || '';
+      form.valor.value = ruptura.valor || '';
+
+      mostrarMotivo(form.statusFinal);
+      form.dataset.editIndex = index;
+
+      abrirModalRuptura();
+    }
+
+    // Habilita/desabilita campo motivo
+    function mostrarMotivo(selectOrValue) {
+      const motivoInput = document.querySelector('input[name="motivo"]');
+      let val = selectOrValue;
+      if (typeof selectOrValue === 'object') val = selectOrValue.value;
+      motivoInput.disabled = val !== 'Cancelado';
+      if(val !== 'Cancelado') motivoInput.value = '';
+    }
+
+    // Calculadora de lucro
+    function calcularLucro() {
+      const vendaFutura = parseFloat(document.getElementById('vendaFutura').value) || 0;
+      const tarifa = parseFloat(document.getElementById('tarifa').value) || 0;
+      const prejuizoDevolucao = parseFloat(document.getElementById('prejuizoDevolucao').value) || 0;
+      const frete = parseFloat(document.getElementById('frete').value) || 0;
+      const custoPeca = parseFloat(document.getElementById('custoPeca').value) || 0;
+
+      const tarifaValor = (tarifa / 100) * vendaFutura;
+      const lucro = vendaFutura - tarifaValor - prejuizoDevolucao - frete - custoPeca;
+
+      const resultado = document.getElementById('resultado');
+      const mensagemDevolucao = document.getElementById('mensagemDevolucao');
+
+      if (lucro >= 0) {
+        resultado.textContent = `Lucro: R$ ${lucro.toFixed(2)}`;
+        resultado.className = 'positivo';
+        mensagemDevolucao.textContent = '';
+      } else {
+        resultado.textContent = `Prejuízo: R$ ${lucro.toFixed(2)}`;
+        resultado.className = 'negativo';
+        mensagemDevolucao.textContent = 'Não aceitar devolução.';
+      }
+    }
+
+    // Inicializa
+    showTab('devolucoes');
+    renderDevolucoes();
+    renderRupturas();
+  </script>
+
+</body>
+</html>
